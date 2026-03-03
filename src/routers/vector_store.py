@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from src.database import get_collection, reset_chroma, get_client
+from src.database import get_collection, reset_chroma
 from src.models import DocumentAdd, DocumentQuery, QueryResponse
 
 router = APIRouter(prefix="/vector", tags=["vector-store"])

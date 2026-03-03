@@ -1,8 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useAtom, useAtomValue } from "jotai";
 import { Info } from "lucide-react";
-import { useId } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { toast } from "sonner";
 import {
+	apiKeyAtom,
+	hasChangesAtom,
+	ocrEngineAtom,
+	originalSettingsAtom,
+	settingsAtom,
+	sttEngineAtom,
+	sttSizeAtom,
+} from "@/atoms/settings";
+import {
+	Button,
 	Card,
 	CardAction,
 	CardContent,
@@ -10,24 +21,69 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
+	Input,
+	Label,
 	NativeSelect,
 	NativeSelectOption,
-} from "@/components/ui/native-select";
-import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/components/ui";
+import { useSettings, useUpdateSettings } from "@/hooks/use-settings";
 
 export const Route = createFileRoute("/settings/")({
 	component: Settings,
 });
 
 function Settings() {
+	const { data: settings, isLoading } = useSettings();
+	const updateMutation = useUpdateSettings();
+
+	const [apiKey, setApiKey] = useAtom(apiKeyAtom);
+	const [sttEngine, setSttEngine] = useAtom(sttEngineAtom);
+	const [ocrEngine, setOcrEngine] = useAtom(ocrEngineAtom);
+	const [sttSize, setSttSize] = useAtom(sttSizeAtom);
+	const hasChanges = useAtomValue(hasChangesAtom);
+	const [, setOriginalSettings] = useAtom(originalSettingsAtom);
+	const [, setSettings] = useAtom(settingsAtom);
+
+	useEffect(() => {
+		if (settings) {
+			setSettings(settings);
+			setOriginalSettings(settings);
+		}
+	}, [settings, setSettings, setOriginalSettings]);
+
+	const handleSave = async () => {
+		try {
+			await updateMutation.mutateAsync({
+				api_key: apiKey,
+				stt_engine: sttEngine,
+				ocr_engine: ocrEngine,
+				stt_size: sttSize,
+			});
+			toast.success("Settings saved successfully");
+			setOriginalSettings({
+				api_key: apiKey,
+				stt_engine: sttEngine,
+				ocr_engine: ocrEngine,
+				stt_size: sttSize,
+			});
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to save settings",
+			);
+		}
+	};
+
+	if (isLoading) {
+		return (
+			<div className="h-full flex justify-center items-center">
+				<p>Loading settings...</p>
+			</div>
+		);
+	}
+
 	return (
 		<div className="h-full flex justify-center items-center">
 			<Card className="w-full max-w-sm flex">
@@ -50,61 +106,68 @@ function Settings() {
 					</CardAction>
 				</CardHeader>
 				<CardContent>
-					<form>
-						<div className="flex flex-col gap-6">
-							<div className="grid gap-2">
-								<div className="flex items-center justify-between">
-									<Label htmlFor="api-key">Groq API Key</Label>
-									<Label className="text-red-400">*required</Label>
-								</div>
-								<Input id={useId()} type="password" required />
-							</div>
+					<div className="flex flex-col gap-6">
+						<div className="grid gap-2">
 							<div className="flex items-center justify-between">
-								<div className="grid gap-2">
-									<div className="flex items-center justify-between">
-										<Label htmlFor="stt">STT</Label>
-									</div>
-									<NativeSelect>
-										<NativeSelectOption value="stt-gpu">GPU</NativeSelectOption>
-										<NativeSelectOption value="stt-cpu">CPU</NativeSelectOption>
-									</NativeSelect>
-								</div>
-								<div className="grid gap-2">
-									<div className="flex items-center justify-between">
-										<Label htmlFor="ocr">OCR</Label>
-									</div>
-									<NativeSelect>
-										<NativeSelectOption value="ocr-gpu">GPU</NativeSelectOption>
-										<NativeSelectOption value="ocr-cpu">CPU</NativeSelectOption>
-									</NativeSelect>
-								</div>
-								<div className="grid gap-2">
-									<div className="flex items-center justify-between">
-										<Label htmlFor="stt-size">STT Size</Label>
-									</div>
-									<NativeSelect>
-										<NativeSelectOption value="stt-tiny">
-											Tiny
-										</NativeSelectOption>
-										<NativeSelectOption value="stt-base">
-											Base
-										</NativeSelectOption>
-										<NativeSelectOption value="stt-small">
-											Small
-										</NativeSelectOption>
-									</NativeSelect>
-								</div>
+								<Label htmlFor="api-key">Groq API Key</Label>
+								<Label className="text-red-400">*required</Label>
+							</div>
+							<Input
+								type="password"
+								value={apiKey}
+								onChange={(e) => setApiKey(e.target.value)}
+								required
+							/>
+						</div>
+						<div className="flex items-center justify-between">
+							<div className="grid gap-2">
+								<Label>STT</Label>
+								<NativeSelect
+									value={sttEngine}
+									onChange={(e) =>
+										setSttEngine(e.target.value as "gpu" | "cpu")
+									}
+								>
+									<NativeSelectOption value="gpu">GPU</NativeSelectOption>
+									<NativeSelectOption value="cpu">CPU</NativeSelectOption>
+								</NativeSelect>
+							</div>
+							<div className="grid gap-2">
+								<Label>OCR</Label>
+								<NativeSelect
+									value={ocrEngine}
+									onChange={(e) =>
+										setOcrEngine(e.target.value as "gpu" | "cpu")
+									}
+								>
+									<NativeSelectOption value="gpu">GPU</NativeSelectOption>
+									<NativeSelectOption value="cpu">CPU</NativeSelectOption>
+								</NativeSelect>
+							</div>
+							<div className="grid gap-2">
+								<Label>STT Size</Label>
+								<NativeSelect
+									value={sttSize}
+									onChange={(e) =>
+										setSttSize(e.target.value as "tiny" | "base" | "small")
+									}
+								>
+									<NativeSelectOption value="tiny">Tiny</NativeSelectOption>
+									<NativeSelectOption value="base">Base</NativeSelectOption>
+									<NativeSelectOption value="small">Small</NativeSelectOption>
+								</NativeSelect>
 							</div>
 						</div>
-					</form>
+					</div>
 				</CardContent>
 				<CardFooter className="flex-col gap-2 items-end">
-					{/* 
-            No changes --> do nothing 
-					  Changes --> restart backend with latest config 
-          */}
-					<Button type="submit" className="w-full cursor-pointer">
-						Save Settings
+					<Button
+						type="submit"
+						className="w-full cursor-pointer"
+						onClick={handleSave}
+						disabled={!hasChanges || updateMutation.isPending}
+					>
+						{updateMutation.isPending ? "Saving..." : "Save Settings"}
 					</Button>
 				</CardFooter>
 			</Card>

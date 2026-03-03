@@ -19,3 +19,19 @@ class QueryResponse(BaseModel):
     documents: list[list[str]]
     distances: list[list[float]]
     metadatas: list[list[dict]]
+
+
+# SQLite models
+class Settings(BaseModel):
+    id: int
+    ocr_engine: str
+    stt_engine: str
+    stt_size: str
+    api_key: str
+
+
+class SettingsUpdate(BaseModel):
+    ocr_engine: str
+    stt_engine: str
+    stt_size: str
+    api_key: str
