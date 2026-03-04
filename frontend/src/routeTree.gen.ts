@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as CompanionIndexRouteImport } from './routes/companion/index'
+import { Route as ArtifactIndexRouteImport } from './routes/artifact/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,33 +29,42 @@ const CompanionIndexRoute = CompanionIndexRouteImport.update({
   path: '/companion/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArtifactIndexRoute = ArtifactIndexRouteImport.update({
+  id: '/artifact/',
+  path: '/artifact/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/artifact/': typeof ArtifactIndexRoute
   '/companion/': typeof CompanionIndexRoute
   '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/artifact': typeof ArtifactIndexRoute
   '/companion': typeof CompanionIndexRoute
   '/settings': typeof SettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/artifact/': typeof ArtifactIndexRoute
   '/companion/': typeof CompanionIndexRoute
   '/settings/': typeof SettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/companion/' | '/settings/'
+  fullPaths: '/' | '/artifact/' | '/companion/' | '/settings/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/companion' | '/settings'
-  id: '__root__' | '/' | '/companion/' | '/settings/'
+  to: '/' | '/artifact' | '/companion' | '/settings'
+  id: '__root__' | '/' | '/artifact/' | '/companion/' | '/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArtifactIndexRoute: typeof ArtifactIndexRoute
   CompanionIndexRoute: typeof CompanionIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
 }
@@ -82,11 +92,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanionIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/artifact/': {
+      id: '/artifact/'
+      path: '/artifact'
+      fullPath: '/artifact/'
+      preLoaderRoute: typeof ArtifactIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArtifactIndexRoute: ArtifactIndexRoute,
   CompanionIndexRoute: CompanionIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
 }
